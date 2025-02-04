@@ -21,7 +21,9 @@
 wp-config.php
 
 # Example themes
-/wp-content/themes/twenty*/
+/wp-content/themes/twentytwentyfive
+/wp-content/themes/twentytwentyfour
+/wp-content/themes/twentytwentythree
 
 # Example plugin
 /wp-content/plugins/hello.php
