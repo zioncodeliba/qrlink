@@ -31,7 +31,7 @@ function render_license_management_page() {
         LEFT JOIN {$wpdb->prefix}postmeta pm4 ON p.ID = pm4.post_id AND pm4.meta_key = '_total_paid'
         LEFT JOIN {$wpdb->prefix}postmeta o ON p.ID = o.post_id AND o.meta_key = '_order_total'
         LEFT JOIN {$wpdb->prefix}users c ON p.post_author = c.ID
-        WHERE p.post_type in ('shop_order','shop_order_placehold')
+        WHERE p.post_type IN ('shop_order', 'shop_order_placehold')
     ");
 
     echo "<div class='wrap'>";
@@ -59,7 +59,13 @@ function render_license_management_page() {
                 <td>{$license->post_status}</td>
                 <td>{$license->license_key}</td>
                 <td>{$license->license_status}</td>
-                <td>{$license->expiry_date}</td>
+                <td>
+                    <form method='post'>
+                        <input type='hidden' name='license_id' value='{$license->ID}'>
+                        <input type='date' name='expiry_date' value='{$license->expiry_date}'>
+                        <input type='submit' name='update_expiry' value='עדכן' class='button'>
+                    </form>
+                </td>
                 <td>{$license->post_date}</td>
                 <td>{$license->order_total} ₪</td>
                 <td>{$license->total_paid} ₪</td>
@@ -73,6 +79,7 @@ function render_license_management_page() {
 
     echo "</tbody></table></div>";
 }
+
 
 
 // שינוי סטטוס רישיון
@@ -91,3 +98,19 @@ function update_license_status() {
     }
 }
 add_action('admin_init', 'update_license_status');
+
+function update_license_expiry_date() {
+    if (isset($_POST['update_expiry']) && isset($_POST['license_id']) && isset($_POST['expiry_date'])) {
+        $license_id = intval($_POST['license_id']);
+        $new_expiry_date = sanitize_text_field($_POST['expiry_date']);
+
+        if (!empty($new_expiry_date)) {
+            update_post_meta($license_id, '_license_expiration', $new_expiry_date);
+            echo "<div class='updated'><p>תאריך התפוגה עודכן בהצלחה!</p></div>";
+        } else {
+            echo "<div class='error'><p>שגיאה: אנא הזן תאריך תקין.</p></div>";
+        }
+    }
+}
+add_action('admin_init', 'update_license_expiry_date');
+
