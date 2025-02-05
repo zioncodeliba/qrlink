@@ -36,7 +36,7 @@ function render_license_management_page() {
 
     echo "<div class='wrap'>";
     echo "<h1>ניהול רישיונות</h1>";
-    echo "<table class='wp-list-table widefat fixed striped'>";
+    echo "<table class='wp-list-table widefat striped'>";
     echo "<thead><tr>
             <th>מזהה</th>
             <th>שם הלקוח</th>
@@ -52,7 +52,7 @@ function render_license_management_page() {
           </tr></thead><tbody>";
 
     foreach ($licenses as $license) {
-        echo "<tr>
+        echo "<tr id='row-{$license->ID}'>
                 <td>{$license->ID}</td>
                 <td>{$license->display_name}</td>
                 <td>{$license->user_email}</td>
@@ -60,11 +60,8 @@ function render_license_management_page() {
                 <td>{$license->license_key}</td>
                 <td>{$license->license_status}</td>
                 <td>
-                    <form method='post'>
-                        <input type='hidden' name='license_id' value='{$license->ID}'>
-                        <input type='date' name='expiry_date' value='{$license->expiry_date}'>
-                        <input type='submit' name='update_expiry' value='עדכן' class='button'>
-                    </form>
+                    <input type='date' id='expiry-date-{$license->ID}' value='{$license->expiry_date}'>
+                    <button class='button update-expiry' data-id='{$license->ID}'>שמור</button>
                 </td>
                 <td>{$license->post_date}</td>
                 <td>{$license->order_total} ₪</td>
@@ -78,7 +75,13 @@ function render_license_management_page() {
     }
 
     echo "</tbody></table></div>";
+var_dump(plugin_basename());
+var_dump(plugin_dir_url( __FILE__ ));
+var_dump(plugin_basename( plugin_dir_url( __FILE__ )));
+    // הוספת קובץ JavaScript של AJAX
+    echo "<script src='admin-ajax.js'></script>";
 }
+
 
 
 
@@ -114,3 +117,21 @@ function update_license_expiry_date() {
 }
 add_action('admin_init', 'update_license_expiry_date');
 
+function update_license_expiry_ajax() {
+    // בדיקת הרשאות
+    if (!current_user_can('manage_woocommerce')) {
+        wp_send_json_error('אין לך הרשאות לעדכן');
+    }
+
+    // קבלת הנתונים מהבקשה
+    $license_id = intval($_POST['license_id']);
+    $new_expiry_date = sanitize_text_field($_POST['expiry_date']);
+
+    if (!empty($license_id) && !empty($new_expiry_date)) {
+        update_post_meta($license_id, '_license_expiration', $new_expiry_date);
+        wp_send_json_success('תאריך התפוגה עודכן בהצלחה!');
+    } else {
+        wp_send_json_error('שגיאה: נא להזין תאריך תקין');
+    }
+}
+add_action('wp_ajax_update_license_expiry', 'update_license_expiry_ajax');
