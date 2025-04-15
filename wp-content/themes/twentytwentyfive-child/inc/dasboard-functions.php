@@ -75,11 +75,11 @@ function render_license_management_page() {
     }
 
     echo "</tbody></table></div>";
-var_dump(plugin_basename());
-var_dump(plugin_dir_url( __FILE__ ));
-var_dump(plugin_basename( plugin_dir_url( __FILE__ )));
+// var_dump(plugin_basename());
+// var_dump(plugin_dir_url( __FILE__ ));
+// var_dump(plugin_basename( plugin_dir_url( __FILE__ )));
     // הוספת קובץ JavaScript של AJAX
-    echo "<script src='admin-ajax.js'></script>";
+    // echo "<script src='admin-ajax.js'></script>";
 }
 
 

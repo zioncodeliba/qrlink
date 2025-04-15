@@ -20,7 +20,7 @@ function display_license_column_data($column, $post_id) {
 
     if ($column === 'license_key') {
         
-        $license_key = get_post_meta($post_id->id, '_license_key', true);
+        $license_key = get_post_meta($post_id->get_id(), '_license_key', true);
         error_log("🔍 Running get_post_meta for  license_key: " . $license_key);
         
         // אם `get_post_meta` מחזיר ערך ריק, נשתמש בשאילתת DB ישירה
@@ -36,7 +36,7 @@ function display_license_column_data($column, $post_id) {
     }
 
     if ($column === 'license_expiration') {
-        $expiration_date = get_post_meta($post_id->id, '_license_expiration', true);
+        $expiration_date = get_post_meta($post_id->get_id(), '_license_expiration', true);
         
         // אם `get_post_meta` מחזיר ערך ריק, נשלוף ישירות מה-DB
         // if (empty($expiration_date)) {

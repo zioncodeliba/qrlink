@@ -9,20 +9,19 @@ document.addEventListener("DOMContentLoaded", function () {
             formData.append("license_id", licenseId);
             formData.append("expiry_date", newExpiryDate);
 
-            fetch(ajaxurl, {
+            fetch(licenseAjax.ajaxurl, {
                 method: "POST",
                 body: formData,
-                credentials: "same-origin",
+                credentials: "same-origin"
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.success) {
-                        alert("✅ " + data.data);
-                    } else {
-                        alert("❌ " + data.data);
-                    }
-                })
-                .catch((error) => console.error("Error:", error));
+            .then((res) => res.json())
+            .then((data) => {
+                alert((data.success ? "✅ " : "❌ ") + data.data);
+            })
+            .catch((err) => {
+                console.error("שגיאה ב-AJAX:", err);
+                alert("❌ שגיאה כללית");
+            });
         });
     });
 });
