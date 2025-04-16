@@ -18,21 +18,24 @@ function render_license_management_page() {
 
     $licenses = $wpdb->get_results("
         SELECT p.ID, p.post_status, p.post_date, 
-               pm1.meta_value AS license_key, 
-               pm2.meta_value AS license_status,
-               pm3.meta_value AS expiry_date, 
-               pm4.meta_value AS total_paid, 
-               o.meta_value as order_total, 
-               c.display_name, c.user_email
+            pm1.meta_value AS license_key, 
+            pm2.meta_value AS license_status,
+            pm3.meta_value AS expiry_date, 
+            pm4.meta_value AS total_paid, 
+            o.meta_value as order_total, 
+            c.display_name, c.user_email,
+            pm5.meta_value AS license_domain
         FROM {$wpdb->prefix}posts p
         LEFT JOIN {$wpdb->prefix}postmeta pm1 ON p.ID = pm1.post_id AND pm1.meta_key = '_license_key'
         LEFT JOIN {$wpdb->prefix}postmeta pm2 ON p.ID = pm2.post_id AND pm2.meta_key = '_license_status'
         LEFT JOIN {$wpdb->prefix}postmeta pm3 ON p.ID = pm3.post_id AND pm3.meta_key = '_license_expiration'
         LEFT JOIN {$wpdb->prefix}postmeta pm4 ON p.ID = pm4.post_id AND pm4.meta_key = '_total_paid'
         LEFT JOIN {$wpdb->prefix}postmeta o ON p.ID = o.post_id AND o.meta_key = '_order_total'
+        LEFT JOIN {$wpdb->prefix}postmeta pm5 ON p.ID = pm5.post_id AND pm5.meta_key = '_license_domain'
         LEFT JOIN {$wpdb->prefix}users c ON p.post_author = c.ID
         WHERE p.post_type IN ('shop_order', 'shop_order_placehold')
     ");
+
 
     echo "<div class='wrap'>";
     echo "<h1>ניהול רישיונות</h1>";
@@ -43,6 +46,7 @@ function render_license_management_page() {
             <th>אימייל</th>
             <th>סטטוס הזמנה</th>
             <th>מפתח רישיון</th>
+            <th>דומיין</th>
             <th>סטטוס רישיון</th>
             <th>תאריך תפוגה</th>
             <th>תאריך רכישה</th>
@@ -58,6 +62,7 @@ function render_license_management_page() {
                 <td>{$license->user_email}</td>
                 <td>{$license->post_status}</td>
                 <td>{$license->license_key}</td>
+                <td>{$license->license_domain}</td>
                 <td>{$license->license_status}</td>
                 <td>
                     <input type='date' id='expiry-date-{$license->ID}' value='{$license->expiry_date}'>

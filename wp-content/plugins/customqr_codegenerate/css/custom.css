@@ -1,0 +1,8 @@
+.dropdownfields {display:flex;}
+.dropdownfields select { margin-right: 20px;}
+
+.custom-qrcode-table {
+    table-layout: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+}

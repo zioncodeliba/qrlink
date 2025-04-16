@@ -63,65 +63,30 @@ function display_license_info_in_order($order) {
 }
 add_action('woocommerce_admin_order_data_after_billing_address', 'display_license_info_in_order');
 
-// function add_license_key_to_order($order_id) {
-//     if (!$order_id) return;
-
-//     // error_log("Running add_license_key_to_order for order ID: " . $order_id);
-
-//     $order = wc_get_order($order_id);
-//     foreach ($order->get_items() as $item) {
-//         $product = $item->get_product();
-        
-//         // ודא שזה המוצר הנכון
-//         if ($product->get_id() == 12) { 
-//             $license_key = strtoupper(bin2hex(random_bytes(10)));
-//             $expiration_date = date('Y-m-d', strtotime('+1 year')); // הרישיון תקף לשנה
-
-//             // שמירת מפתח רישיון + תאריך תפוגה
-//             update_post_meta($order_id, '_license_key', $license_key);
-//             update_post_meta($order_id, '_license_expiration', $expiration_date);
-
-//             // שליחת מייל עם פרטי הרישיון
-//             $email = $order->get_billing_email();
-//             $subject = "מפתח הרישיון שלך";
-//             $message = "המפתח שלך: $license_key\nתוקף עד: $expiration_date\nלחידוש לחץ כאן: https://yourwebsite.com/renew";
-//             wp_mail($email, $subject, $message);
-//         }
-//     }
-// }
-// add_action('woocommerce_payment_complete', 'add_license_key_to_order');
-// add_action('woocommerce_order_status_completed', 'add_license_key_to_order');
 
 function add_license_key_to_order($order_id) {
     if (!$order_id) return;
 
-    // טוען את ההזמנה ומוציא את מזהה המשתמש
     $order = wc_get_order($order_id);
     $user_id = $order->get_user_id();
 
-    // עובר על כל פריט בהזמנה
     foreach ($order->get_items() as $item) {
         $product_id = $item->get_product_id();
 
-        // נבדוק אם מדובר במוצר רלוונטי – רכישה ראשונית או חידוש
         if ($product_id == 12 || $product_id == 15) {
-            // קביעה אם מדובר בחידוש (מוצר 15) או רכישה ראשונית (מוצר 12)
             $is_renewal = ($product_id == 15);
 
-            // יצירת מפתח רישיון חדש ותאריך תפוגה לשנה קדימה
             $new_license_key = strtoupper(bin2hex(random_bytes(10)));
             $expiration_date = date('Y-m-d', strtotime('+1 year'));
 
-            // עדכון מטא בהזמנה
             update_post_meta($order_id, '_license_key', $new_license_key);
             update_post_meta($order_id, '_license_expiration', $expiration_date);
 
-            // ניהול היסטוריית רישיונות במשתמש
             $license_history = get_user_meta($user_id, '_license_history', true);
             if (!is_array($license_history)) {
                 $license_history = array();
             }
-            // רשומה חדשה בהיסטוריה
+
             $license_entry = array(
                 'license_key'      => $new_license_key,
                 'expiration_date'  => $expiration_date,
@@ -129,24 +94,46 @@ function add_license_key_to_order($order_id) {
                 'date_generated'   => current_time('Y-m-d H:i:s'),
                 'is_renewal'       => $is_renewal,
             );
-            // מוסיפים את הרשומה למערך
+
             $license_history[] = $license_entry;
             update_user_meta($user_id, '_license_history', $license_history);
-
-            // עדכון הרישיון הנוכחי של המשתמש (ניתן להשתמש בערך זה בעת בדיקת הרשאות)
             update_user_meta($user_id, '_current_license', $license_entry);
 
-            // שליחת מייל עם הפרטים
             $email = $order->get_billing_email();
             $subject = ($is_renewal ? "חידוש רישיון" : "מפתח הרישיון שלך") . " - " . get_bloginfo('name');
-            $message = "שלום,\n\n".
-                       "המפתח שלך: {$new_license_key}\n".
-                       "תוקף עד: {$expiration_date}\n\n".
-                       "תודה על הרכישה!";
-            wp_mail($email, $subject, $message);
+
+            // כתובת הורדה
+            $download_link = 'https://woocommerce-761776-5227801.cloudwaysapps.com/download-plugin.php?email=' . urlencode($email);
+
+            // הודעה עם HTML
+            $message = "<html><body>";
+            $message .= "<p>שלום,</p>";
+            $message .= "<p><strong>מפתח הרישיון שלך:</strong> {$new_license_key}<br>";
+            $message .= "<strong>תוקף:</strong> {$expiration_date}</p>";
+
+            if (!$is_renewal) {
+                $message .= "<p>להורדת הפלאגין לחץ על הכפתור הבא:</p>";
+                $message .= "<p><a href='{$download_link}' style='
+                    display: inline-block;
+                    background-color: #007cba;
+                    color: #ffffff;
+                    padding: 12px 24px;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-weight: bold;'>📦 הורד את הפלאגין</a></p>";
+            }
+
+            $message .= "<p>תודה רבה,<br>" . get_bloginfo('name') . "</p>";
+            $message .= "</body></html>";
+
+            // כותרות ל־HTML
+            $headers = array('Content-Type: text/html; charset=UTF-8');
+
+            wp_mail($email, $subject, $message, $headers);
         }
     }
 }
+
 // הפעלה על אירוע שבו ההזמנה מסומנת כ-Completed (יכול לעבוד גם עבור תשלום אוטומטי או ידני)
 add_action('woocommerce_order_status_completed', 'add_license_key_to_order');
 
